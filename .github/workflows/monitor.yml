@@ -1,0 +1,57 @@
+name: monitor
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 min (GitHub may delay this under load)
+  workflow_dispatch: {} # manual "Run workflow" button — the reliable demo trigger
+
+permissions:
+  contents: write # needed to commit state.json back
+
+concurrency:
+  group: monitor # never let two runs race on state.json
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - run: python monitor.py
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          TG_ADMIN_CHAT_ID: ${{ secrets.TG_ADMIN_CHAT_ID }}
+          # Optional overrides via repo Variables (Settings -> Secrets and variables -> Variables).
+          # Empty values fall back to the defaults in monitor.py (Bitcoin/USD, alert on change).
+          TARGET_URL: ${{ vars.TARGET_URL }}
+          JSON_PATH: ${{ vars.JSON_PATH }}
+          TARGET_NAME: ${{ vars.TARGET_NAME }}
+          ALERT_MODE: ${{ vars.ALERT_MODE }}
+          THRESHOLD: ${{ vars.THRESHOLD }}
+      - name: persist state between runs
+        # Side benefit: these commits count as repo activity, which keeps the
+        # cron schedule from being auto-disabled after 60 idle days.
+        run: |
+          git add state.json
+          if git diff --cached --quiet; then
+            echo "state unchanged"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore: update monitor state [skip ci]"
+            git push
+          fi
+
+  tests:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q

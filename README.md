@@ -1,27 +1,21 @@
-# Price Watch Bot + Portfolio Menu
+# Price Watch Bot
 
-A Python Telegram bot with two jobs, sharing one codebase and one bot token:
+A Python Telegram bot that polls a public JSON API on a GitHub Actions cron
+(default: Bitcoin/USD from CoinGecko), detects changes or threshold crossings,
+and alerts a Telegram channel. Fetch errors are reported to Telegram instead
+of failing silently. Runs **free, no server needed**.
 
-1. **Monitor (automated):** polls a public JSON API on a GitHub Actions cron
-   (default: Bitcoin/USD from CoinGecko), detects changes or threshold
-   crossings, and alerts a Telegram channel. Fetch errors are reported to
-   Telegram instead of failing silently. Runs **free, no server needed**.
-2. **Portfolio menu (interactive):** message the bot `/start` and it shows an
-   inline-button menu of my projects — tap one for a description + screenshot
-   and buttons to the live demo and source code.
-
-> 📸 *Add a screenshot/GIF of the Telegram alert + menu here before publishing.*
+> 📸 *Add a screenshot/GIF of the Telegram alert here before publishing.*
 
 **Architecture:** GitHub Actions cron → `monitor.py` → target API → Telegram
-channel · `state.json` committed back between runs · `portfolio_bot.py` long-polls
-the same token for the interactive menu.
+channel · `state.json` committed back between runs.
 
 **Stack:** Python 3.11+ · `requests` (only runtime dependency) · Telegram Bot
 API · GitHub Actions · pytest.
 
-This bot also delivers the lead notifications for my
-[lead-funnel project](https://github.com/CHANGE-ME/lead-funnel) — the two work
-as one system.
+This bot's token also delivers the lead notifications for my lead-funnel
+project (landing page + multi-step form) — the two work as one system.
+*(Repo link will be added here once that project is published.)*
 
 ## Quick start (one command)
 
@@ -64,22 +58,6 @@ variables → Actions** (secrets: `TG_TOKEN`, `TG_CHAT_ID`; the rest as
 Threshold modes alert **once, on crossing** — not every 30 minutes while the
 value sits past the line.
 
-## Portfolio menu bot
-
-```bash
-python portfolio_bot.py
-```
-
-Edit [projects.json](projects.json) to list your projects (`CHANGE-ME` links
-are placeholders). Each entry: `id`, `title`, `description`, optional `image`
-(https URL of a screenshot — shown as a photo), `url` (live demo button),
-`repo` (source button). The file is validated at startup; bad ids or non-https
-links refuse to boot.
-
-This process needs to stay running (Telegram long polling), so run it on your
-machine during a demo or on any free worker host. It never conflicts with the
-Actions cron — the monitor only *sends* messages, it doesn't poll.
-
 ## Tests
 
 ```bash
@@ -88,7 +66,7 @@ python -m pytest -q
 
 Covers: JSON path extraction against a saved sample response, alert/threshold
 logic, state read/write round-trip (including a corrupt `state.json`), HTML
-escaping, message truncation, and `projects.json` validation.
+escaping, and message truncation.
 
 ## Security notes
 
@@ -98,9 +76,6 @@ escaping, message truncation, and `projects.json` validation.
   request URL, which contains the token, so they never reach logs verbatim.
 - All dynamic text is HTML-escaped before sending; messages are truncated to
   Telegram's limits.
-- The menu bot only serves whitelisted content from `projects.json`: callback
-  data is validated against known ids, user input is never echoed back, and
-  link fields must be `https://`.
 - `state.json` is written atomically (temp file + rename) so a killed run
   can't corrupt it — and a corrupt file degrades to "first run", not a crash.
 

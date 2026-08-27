@@ -11,9 +11,8 @@ import html
 
 import requests
 
-# Telegram hard limits (https://core.telegram.org/bots/api)
+# Telegram hard limit (https://core.telegram.org/bots/api)
 MAX_MESSAGE_LEN = 4096
-MAX_CAPTION_LEN = 1024
 
 
 class TelegramError(RuntimeError):
@@ -59,39 +58,11 @@ class Bot:
             )
         return data.get("result")
 
-    # --- convenience wrappers -------------------------------------------
-
-    def send_message(self, chat_id, text: str, reply_markup: dict | None = None):
-        params = {
-            "chat_id": chat_id,
-            "text": truncate(text, MAX_MESSAGE_LEN),
-            "parse_mode": "HTML",
-            "disable_web_page_preview": True,
-        }
-        if reply_markup:
-            params["reply_markup"] = reply_markup
-        return self.call("sendMessage", **params)
-
-    def send_photo(self, chat_id, photo_url: str, caption: str, reply_markup: dict | None = None):
-        params = {
-            "chat_id": chat_id,
-            "photo": photo_url,
-            "caption": truncate(caption, MAX_CAPTION_LEN),
-            "parse_mode": "HTML",
-        }
-        if reply_markup:
-            params["reply_markup"] = reply_markup
-        return self.call("sendPhoto", **params)
-
-    def answer_callback_query(self, callback_query_id: str):
-        return self.call("answerCallbackQuery", callback_query_id=callback_query_id)
-
-    def get_updates(self, offset: int | None, poll_seconds: int = 50):
-        params = {
-            "timeout": poll_seconds,
-            "allowed_updates": ["message", "callback_query"],
-        }
-        if offset is not None:
-            params["offset"] = offset
-        # HTTP timeout must exceed the long-poll window or every call times out.
-        return self.call("getUpdates", timeout=poll_seconds + 10, **params)
+    def send_message(self, chat_id, text: str):
+        return self.call(
+            "sendMessage",
+            chat_id=chat_id,
+            text=truncate(text, MAX_MESSAGE_LEN),
+            parse_mode="HTML",
+            disable_web_page_preview=True,
+        )

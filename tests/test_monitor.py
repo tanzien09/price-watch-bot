@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 
 import monitor
-import portfolio_bot
 from tg import esc, truncate
 
 SAMPLE = json.loads(
@@ -88,33 +87,3 @@ def test_html_is_escaped():
 
 def test_truncate_respects_limit():
     assert len(truncate("x" * 5000, 4096)) == 4096
-
-
-# --- portfolio bot validation ------------------------------------------
-
-
-def test_shipped_projects_json_is_valid():
-    projects = portfolio_bot.load_projects()
-    assert len(projects) >= 1
-
-
-def test_bad_project_id_rejected(tmp_path):
-    bad = tmp_path / "projects.json"
-    bad.write_text(
-        json.dumps({"projects": [{"id": "../evil", "title": "t", "description": "d"}]}),
-        encoding="utf-8",
-    )
-    with pytest.raises(SystemExit):
-        portfolio_bot.load_projects(bad)
-
-
-def test_non_https_link_rejected(tmp_path):
-    bad = tmp_path / "projects.json"
-    bad.write_text(
-        json.dumps(
-            {"projects": [{"id": "a", "title": "t", "description": "d", "url": "http://x"}]}
-        ),
-        encoding="utf-8",
-    )
-    with pytest.raises(SystemExit):
-        portfolio_bot.load_projects(bad)

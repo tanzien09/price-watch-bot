@@ -41,7 +41,7 @@ step "First real monitor run"
 if [ "${1:-}" = "--deploy" ]; then
     step "Deploying to GitHub (public repo + secrets + push)"
     command -v gh >/dev/null || { echo "gh CLI not found - install from cli.github.com and 'gh auth login' first"; exit 1; }
-    [ -d .git ] || { git init; git add .; git commit -m "feat: price watch bot + portfolio menu"; }
+    [ -d .git ] || { git init; git add .; git commit -m "feat: price watch bot"; }
     gh repo create price-watch-bot --public --source . --push
     grep -E '^(TG_TOKEN|TG_CHAT_ID|TG_ADMIN_CHAT_ID)=.+' .env | while IFS='=' read -r k v; do
         gh secret set "$k" --body "$v"
@@ -49,4 +49,4 @@ if [ "${1:-}" = "--deploy" ]; then
     echo "Deployed. Open the repo's Actions tab -> monitor -> Run workflow to demo it."
 fi
 
-printf '\n\033[32mDone.\033[0m Portfolio menu bot: %s portfolio_bot.py\n' "$PY"
+printf '\n\033[32mDone.\033[0m\n'

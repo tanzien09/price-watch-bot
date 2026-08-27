@@ -52,7 +52,7 @@ if ($Deploy) {
     Step "Deploying to GitHub (public repo + secrets + push)"
     $gh = Get-Command gh -ErrorAction SilentlyContinue
     if (-not $gh) { Write-Host "gh CLI not found - install from cli.github.com, run 'gh auth login', then re-run with -Deploy." -ForegroundColor Red; exit 1 }
-    if (-not (Test-Path ".git")) { git init; git add .; git commit -m "feat: price watch bot + portfolio menu" }
+    if (-not (Test-Path ".git")) { git init; git add .; git commit -m "feat: price watch bot" }
     gh repo create price-watch-bot --public --source . --push
     if ($LASTEXITCODE -ne 0) { Write-Host "Repo create/push failed (maybe it already exists?)" -ForegroundColor Red; exit 1 }
     # Read secrets out of .env and push them to Actions secrets
@@ -64,7 +64,5 @@ if ($Deploy) {
     Write-Host "`nDeployed. Open the repo's Actions tab -> 'monitor' -> 'Run workflow' to demo it." -ForegroundColor Green
 }
 
-Write-Host "`nDone. Next steps:" -ForegroundColor Green
-Write-Host "  - Portfolio menu bot (interactive):  .\.venv\Scripts\python.exe portfolio_bot.py"
-Write-Host "  - Edit projects.json with your real project links/images"
-if (-not $Deploy) { Write-Host "  - Deploy to GitHub Actions:          .\setup.ps1 -Deploy" }
+Write-Host "`nDone." -ForegroundColor Green
+if (-not $Deploy) { Write-Host "  Next: deploy to GitHub Actions with  .\setup.ps1 -Deploy" }
